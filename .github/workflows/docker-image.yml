@@ -1,45 +1,38 @@
-name: Docker Image CI
+name: Publish Docker image
 
 on:
-  push:
-    branches: [ "main" ]
-
-env:
-  REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}
+  release:
+    types: [published]
 
 jobs:
-  build:
+  push_to_registries:
+    name: Push Docker image to Github Registry
     runs-on: ubuntu-latest
     permissions:
-      contents: read
       packages: write
-
+      contents: read
     steps:
-    - name: Check out the repo
-      uses: actions/checkout@v4  # Updated to the latest version
-
-    - name: Convert repo name to lowercase
-      run: echo "REPO_NAME=$(echo ${{ github.repository }} | awk -F '/' '{print tolower($2)}')" >> $GITHUB_ENV
-
-    - name: Log in to GitHub Container Registry
-      uses: docker/login-action@latest  # Consider pinning to a specific SHA after verifying the latest version
-      with:
-        registry: ${{ env.REGISTRY }}
-        username: ${{ github.actor }}
-        password: ${{ secrets.GITHUB_TOKEN }}
-
-    - name: Extract metadata (tags, labels) for Docker
-      id: meta
-      uses: docker/metadata-action@latest  # Consider pinning to a specific SHA after verifying the latest version
-      with:
-        images: ${{ env.REGISTRY }}/${{ env.REPO_NAME }}
-
-    - name: Build and push Docker image
-      uses: docker/build-push-action@latest  # Consider pinning to a specific SHA after verifying the latest version
-      with:
-        context: .
-        file: ./Dockerfile
-        push: true
-        tags: ${{ steps.meta.outputs.tags }}
-        labels: ${{ steps.meta.outputs.labels }}
+      - name: Check out the repo
+        uses: actions/checkout@v3
+      
+      - name: Log in to the Container registry
+        uses: docker/login-action@65b78e6e13532edd9afa3aa52ac7964289d1a9c1
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.MY_TOCKEN }}
+      
+      - name: Extract metadata (tags, labels) for Docker
+        id: meta
+        uses: docker/metadata-action@9ec57ed1fcdbf14dcef7dfbe97b2010124a938b7
+        with:
+          images: |
+            ghcr.io/${{ github.repository }}
+      
+      - name: Build and push Docker images
+        uses: docker/build-push-action@3b5e8027fcad23fda98b2e3ac259d8d67585f671
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
