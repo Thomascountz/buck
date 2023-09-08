@@ -19,5 +19,5 @@ This is a command line game written in Ruby by ChatGPT. In this game, players mu
 This game is containerized using Docker, and can be run using the following commands:
 
 ```bash
-docker run -it ghcr.io/yourusername/yourrepository:latest
+docker run -it ghcr.io/thomascountz/buck:main
 ```
